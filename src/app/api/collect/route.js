@@ -49,19 +49,19 @@ function generateSummary(company, articles) {
   return `${company} 주요 뉴스: ${titles.join(" / ")}`;
 }
 
+// --- 한국 시간 기준 오늘 날짜 (YYYY-MM-DD) ---
+function getKoreanDate() {
+  const now = new Date();
+  const koreaTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const year = koreaTime.getUTCFullYear();
+  const month = String(koreaTime.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(koreaTime.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 // --- 4. 메인 수집 로직 ---
 async function collectAndSave() {
-  const today = new Date().toLocaleDateString("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  // "2025. 01. 15." → "2025-01-15"
-  const dateStr = today
-    .replace(/\. /g, "-")
-    .replace(".", "")
-    .trim();
+  const dateStr = getKoreanDate();
 
   const results = [];
 

@@ -3,18 +3,17 @@ import { supabase } from "@/lib/supabase";
 // 매 요청마다 최신 데이터 조회 (캐시 안 함)
 export const dynamic = "force-dynamic";
 
+function getKoreanDate() {
+  const now = new Date();
+  const koreaTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const year = koreaTime.getUTCFullYear();
+  const month = String(koreaTime.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(koreaTime.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 async function getTodayBriefings() {
-  // 한국 시간 기준 오늘 날짜
-  const today = new Date().toLocaleDateString("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  const dateStr = today
-    .replace(/\. /g, "-")
-    .replace(".", "")
-    .trim();
+  const dateStr = getKoreanDate();
 
   const { data, error } = await supabase
     .from("briefings")
