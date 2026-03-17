@@ -82,3 +82,10 @@ body {
   color: #888;
   font-size: 15px;
 }
+
+.error {
+  text-align: center;
+  padding: 40px 0;
+  color: #b42318;
+  font-size: 15px;
+}

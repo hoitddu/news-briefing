@@ -1,6 +1,5 @@
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
-// 매 요청마다 최신 데이터 조회 (캐시 안 함)
 export const dynamic = "force-dynamic";
 
 function getKoreanDate() {
@@ -9,12 +8,13 @@ function getKoreanDate() {
   const year = koreaTime.getUTCFullYear();
   const month = String(koreaTime.getUTCMonth() + 1).padStart(2, "0");
   const day = String(koreaTime.getUTCDate()).padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 
 async function getTodayBriefings() {
+  const supabase = getSupabase();
   const dateStr = getKoreanDate();
-
   const { data, error } = await supabase
     .from("briefings")
     .select("*")
@@ -22,16 +22,22 @@ async function getTodayBriefings() {
     .order("company");
 
   if (error) {
-    console.error("조회 실패:", error.message);
-    return [];
+    console.error("Failed to load briefings:", error.message);
+    return {
+      briefings: [],
+      error:
+        "오늘 브리핑을 불러오지 못했습니다. Supabase 설정과 테이블 권한을 확인하세요.",
+    };
   }
 
-  return data || [];
+  return {
+    briefings: data || [],
+    error: null,
+  };
 }
 
 export default async function Home() {
-  const briefings = await getTodayBriefings();
-
+  const { briefings, error } = await getTodayBriefings();
   const today = new Date().toLocaleDateString("ko-KR", {
     timeZone: "Asia/Seoul",
     year: "numeric",
@@ -47,16 +53,18 @@ export default async function Home() {
         <p className="date">{today}</p>
       </div>
 
-      {briefings.length === 0 ? (
+      {error ? (
+        <p className="error">{error}</p>
+      ) : briefings.length === 0 ? (
         <p className="empty">아직 오늘의 브리핑이 없습니다.</p>
       ) : (
-        briefings.map((b) => (
-          <div key={b.id} className="card">
-            <div className="company-name">{b.company}</div>
-            <div className="summary">{b.summary}</div>
+        briefings.map((briefing) => (
+          <div key={briefing.id} className="card">
+            <div className="company-name">{briefing.company}</div>
+            <div className="summary">{briefing.summary}</div>
             <ul className="article-list">
-              {b.articles.map((article, i) => (
-                <li key={i}>
+              {briefing.articles.map((article, index) => (
+                <li key={index}>
                   <a
                     href={article.link}
                     target="_blank"
