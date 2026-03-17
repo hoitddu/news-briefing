@@ -1,4 +1,4 @@
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ function getKoreanDate() {
 }
 
 async function getTodayBriefings() {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
   const dateStr = getKoreanDate();
   const { data, error } = await supabase
     .from("briefings")
