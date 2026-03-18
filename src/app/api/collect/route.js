@@ -112,8 +112,10 @@ async function collectAndSave() {
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get("secret");
+  const startedAt = Date.now();
 
   if (!process.env.CRON_SECRET) {
+    console.error("Collect failed: CRON_SECRET is not configured.");
     return Response.json(
       { error: "CRON_SECRET is not configured." },
       { status: 500 }
@@ -121,12 +123,35 @@ export async function GET(request) {
   }
 
   if (secret !== process.env.CRON_SECRET) {
+    console.error("Collect failed: Unauthorized request.");
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const results = await collectAndSave();
-    return Response.json({ success: true, results });
+    const durationMs = Date.now() - startedAt;
+    const companyStats = results.map(({ company, articleCount }) => ({
+      company,
+      articleCount,
+    }));
+
+    console.log(
+      "Collect succeeded:",
+      JSON.stringify({
+        date: getKoreanDate(),
+        companyCount: results.length,
+        companyStats,
+        durationMs,
+      })
+    );
+
+    return Response.json({
+      success: true,
+      date: getKoreanDate(),
+      companyCount: results.length,
+      companyStats,
+      durationMs,
+    });
   } catch (error) {
     console.error("Collect failed:", error);
     return Response.json({ error: error.message }, { status: 500 });
